@@ -1,7 +1,6 @@
 import xml.etree.ElementTree as ET
 import re
 import nltk
-from nltk.tokenize import word_tokenize as tokenizer
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
 
@@ -17,7 +16,7 @@ def fileWrite():
 
 def processing(text):
     text = text.lower()
-    tokens = tokenizer(text)
+    tokens = re.split(r'[^a-z0-9]+', text)
     stemmedTokens = []
 
     for token in tokens:
@@ -26,6 +25,9 @@ def processing(text):
             stemmedTokens.append(stemmed)
 
     return stemmedTokens
+
+def getBody(text):
+    return text
 
 def getInfobox(text):
     string = ""
@@ -54,25 +56,35 @@ def getCategory(text):
 
 def getLinks(text):
     string = ""
-    regex = re.compile('== ?External Links ?==\n([\S\s]+)', re.I)
+    regex = re.compile('== ?External Links ?==([\S\s]+)', re.I)
+    segs = regex.split(text)[1:]
 
-    for i in regex.finditer(text):
-        section = i.group(1)
+    if len(segs):
+        split = re.split('\n\n', segs[-1])
+        links = re.split('\*', split[0])
+        string = '\n'.join(links)
 
     return string
 
 def getRefs(text):
     string = ""
-    regex = re.compile('== ?References ?==([\S\s]+)[==|\[\[Category:|]', re.I)
+    regex = re.compile('== ?References ?==([\S\s]+)', re.I)
+    segs = regex.split(text)[1:]
 
-    for i in regex.finditer(text):
-        string += '\n' + i.group(1)
+    if len(segs):
+        endRex = re.compile('{{authority control|{{defaultsort|\[\[category|\n==\w+', re.I)
+        refs = endRex.split(segs[-1])[0]
+
+        cleanRex = re.compile('{{reflist', re.I)
+        clean = cleanRex.split(refs)
+        string = '\n'.join(clean)
 
     return string
 
 def bodyParse(body, id, title):
     comps = {
             'title': None,
+            'body': getBody,
             'infobox': getInfobox,
             'category': getCategory,
             'links': getLinks,
