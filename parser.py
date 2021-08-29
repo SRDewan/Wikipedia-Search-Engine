@@ -13,7 +13,7 @@ snowStemmer = SnowballStemmer(language='english')
 index = {}
 
 def fileWrite():
-    pass
+    print(index)
 
 def processing(text):
     text = text.lower()
@@ -21,30 +21,73 @@ def processing(text):
     stemmedTokens = []
 
     for token in tokens:
-        stemmed = snowStemmer(token)
+        stemmed = snowStemmer.stem(token)
         if stemmed not in stopWords:
             stemmedTokens.append(stemmed)
 
     return stemmedTokens
 
+def getInfobox(text):
+    string = ""
+    regex = re.compile('{{ ?Infobox ', re.I)
+    segs = regex.split(text)[1:]
+
+    if len(segs):
+        split = re.split('}}', segs[-1])
+        for j in split:
+            if '{{' not in j:
+                segs[-1] = j
+                break
+
+        string = '\n'.join(segs)
+
+    return string
+
+def getCategory(text):
+    string = ""
+    regex = re.compile('\[\[Category:(.+)\]\]', re.I)
+
+    for i in regex.finditer(text):
+        string += '\n' + i.group(1)
+
+    return string
+
+def getLinks(text):
+    string = ""
+    regex = re.compile('== ?External Links ?==\n([\S\s]+)', re.I)
+
+    for i in regex.finditer(text):
+        section = i.group(1)
+
+    return string
+
+def getRefs(text):
+    string = ""
+    regex = re.compile('== ?References ?==([\S\s]+)[==|\[\[Category:|]', re.I)
+
+    for i in regex.finditer(text):
+        string += '\n' + i.group(1)
+
+    return string
+
 def bodyParse(body, id, title):
-    patterns = {
+    comps = {
             'title': None,
-            'infobox': re.compile('{{ ?Infobox ([\S\s]+)\n}}', re.I),
-            'category': re.compile('\[\[Category:(.+)\]\]', re.I),
-            'links': re.compile('== ?External Links ?==([\S\s]+)', re.I),
-            'references': re.compile('== ?References ?==([\S\s]+)[==|\[\[Category:|]', re.I),
+            'infobox': getInfobox,
+            'category': getCategory,
+            'links': getLinks,
+            'references': getRefs,
             }
     ctr = 0
 
-    for key in patterns:
+    for key in comps:
         string = ""
         if key != 'title':
-            for i in patterns[key].finditer(body):
-                string += '\n' + i.group(1)
+            string = comps[key](body)
         else:
             string = title
 
+        # print(key, " : ", string)
         words = processing(string)
         for word in words:
             if word not in index:
