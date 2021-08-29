@@ -1,3 +1,4 @@
+import os
 import xml.etree.ElementTree as ET
 import re
 import nltk
@@ -11,8 +12,25 @@ snowStemmer = SnowballStemmer(language='english')
 
 index = {}
 
-def fileWrite():
-    print(index)
+def fileWrite(outFolder):
+    labels = ["t", "i", "c", "l", "r"]
+    content = ""
+
+    for word in index:
+        for doc in index[word]:
+            content += word + ":d" + doc
+            ctr = 0
+
+            for field in index[word][doc]:
+                if(field):
+                    content += labels[ctr] + str(field) 
+                ctr += 1
+
+            content += "\n"
+
+    indexFile = open(os.path.join(outFolder, "index.txt"), "w")
+    indexFile.write(content)
+    indexFile.close()
 
 def processing(text):
     text = text.lower()
@@ -21,7 +39,7 @@ def processing(text):
 
     for token in tokens:
         stemmed = snowStemmer.stem(token)
-        if stemmed not in stopWords:
+        if stemmed != '' and stemmed not in stopWords:
             stemmedTokens.append(stemmed)
 
     return stemmedTokens
@@ -84,7 +102,7 @@ def getRefs(text):
 def bodyParse(body, id, title):
     comps = {
             'title': None,
-            'body': getBody,
+            # 'body': getBody,
             'infobox': getInfobox,
             'category': getCategory,
             'links': getLinks,
@@ -111,7 +129,7 @@ def bodyParse(body, id, title):
         
         ctr += 1
 
-def parse(file_path):
+def parse(file_path, outFolder, statFile):
     docs = []
 
     for event, elem in ET.iterparse(file_path, events=("end",)):
@@ -128,4 +146,4 @@ def parse(file_path):
 
         elem.clear()
 
-    fileWrite()
+    fileWrite(outFolder)

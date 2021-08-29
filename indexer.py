@@ -1,4 +1,5 @@
 import sys
+import os
 
 from parser import *
 
@@ -7,7 +8,12 @@ def main():
     indexPath = sys.argv[2]
     indexStat = sys.argv[3]
 
-    docs = parse(wikiPath)
+    try:
+        os.mkdir(indexPath)
+    except FileExistsError:
+        print("Dir already exists!")
+
+    docs = parse(wikiPath, indexPath, indexStat)
 
 if __name__ == '__main__':
     main()
