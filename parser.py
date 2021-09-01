@@ -11,9 +11,15 @@ stopWords = set(stopwords.words('english'))
 snowStemmer = SnowballStemmer(language='english')
 
 index = {}
+batchSize = 1000
 
-def fileWrite(outFolder):
-    labels = ["t", "i", "c", "l", "r"]
+def statWrite(statFilePath):
+    statFile = open(statFilePath, "w")
+    statFile.write(str(0) + "\n" + str(len(index)))
+    statFile.close()
+
+def indexWrite(outFolder):
+    labels = ["t", "b", "i", "c", "l", "r"]
     content = ""
 
     for word in index:
@@ -32,20 +38,20 @@ def fileWrite(outFolder):
     indexFile.write(content)
     indexFile.close()
 
-def processing(text):
+def processing(text, id, field):
     text = text.lower()
     tokens = re.split(r'[^a-z0-9]+', text)
-    stemmedTokens = []
 
     for token in tokens:
-        stemmed = snowStemmer.stem(token)
-        if stemmed != '' and stemmed not in stopWords:
-            stemmedTokens.append(stemmed)
+        if len(token) > 1 and token not in stopWords:
+            word = snowStemmer.stem(token)
 
-    return stemmedTokens
+            if word not in index:
+                index[word] = { id: [0, 0, 0, 0, 0, 0] }
+            elif id not in index[word]:
+                index[word][id] = [0, 0, 0, 0, 0, 0]
 
-def getBody(text):
-    return text
+            index[word][id][field] += 1
 
 def getInfobox(text):
     string = ""
@@ -101,8 +107,8 @@ def getRefs(text):
 
 def bodyParse(body, id, title):
     comps = {
-            'title': None,
-            # 'body': getBody,
+            'title': title,
+            'body': body,
             'infobox': getInfobox,
             'category': getCategory,
             'links': getLinks,
@@ -112,25 +118,17 @@ def bodyParse(body, id, title):
 
     for key in comps:
         string = ""
-        if key != 'title':
-            string = comps[key](body)
+        if isinstance(comps[key], str):
+            string = comps[key]
         else:
-            string = title
+            string = comps[key](body)
 
-        # print(key, " : ", string)
-        words = processing(string)
-        for word in words:
-            if word not in index:
-                index[word] = { id: [0, 0, 0, 0, 0, 0] }
-            elif id not in index[word]:
-                index[word][id] = [0, 0, 0, 0, 0, 0]
-
-            index[word][id][ctr] += 1
-        
+        words = processing(string, id, ctr)
         ctr += 1
 
 def parse(file_path, outFolder, statFile):
     docs = []
+    ctr = 0
 
     for event, elem in ET.iterparse(file_path, events=("end",)):
         _, _, elem.tag = elem.tag.rpartition('}')
@@ -146,4 +144,9 @@ def parse(file_path, outFolder, statFile):
 
         elem.clear()
 
-    fileWrite(outFolder)
+        ctr += 1
+        if ctr % batchSize == 0:
+            print("Done with ", ctr, " docs")
+
+    indexWrite(outFolder)
+    statWrite(statFile)
