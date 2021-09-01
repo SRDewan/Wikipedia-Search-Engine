@@ -11,6 +11,7 @@ stopWords = set(stopwords.words('english'))
 snowStemmer = SnowballStemmer(language='english')
 
 index = {}
+stemmed = {}
 batchSize = 1000
 
 def statWrite(statFilePath):
@@ -44,7 +45,9 @@ def processing(text, id, field):
 
     for token in tokens:
         if len(token) > 1 and token not in stopWords:
-            word = snowStemmer.stem(token)
+            if token not in stemmed:
+                stemmed[token] = snowStemmer.stem(token)
+            word = stemmed[token]
 
             if word not in index:
                 index[word] = { id: [0, 0, 0, 0, 0, 0] }
@@ -142,11 +145,12 @@ def parse(file_path, outFolder, statFile):
         elif elem.tag == 'text' and elem.text != None:
             bodyParse(elem.text, docs[-1]['id'], docs[-1]['title'])
 
-        elem.clear()
+        elif elem.tag == 'page':
+            ctr += 1
+            if ctr % batchSize == 0:
+                print("Done with ", ctr, " docs")
 
-        ctr += 1
-        if ctr % batchSize == 0:
-            print("Done with ", ctr, " docs")
+        elem.clear()
 
     indexWrite(outFolder)
     statWrite(statFile)
