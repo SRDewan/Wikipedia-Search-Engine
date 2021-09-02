@@ -155,8 +155,8 @@ def parse(file_path, outFolder, statFile):
 
         elif elem.tag == 'page':
             ctr += 1
-            if ctr % batchSize == 0:
-                print("Done with ", ctr, " docs")
+            # if ctr % batchSize == 0:
+                # print("Done with ", ctr, " docs")
 
         elem.clear()
 

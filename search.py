@@ -68,6 +68,13 @@ def queryProc(queryStrg):
 
     return searchSpace
 
+def disp(results):
+    print("{")
+    for key in results:
+        print(key, ": ", results[key])
+
+    print("}")
+        
 def main(): 
     indexPath = sys.argv[1]
     queryStrg = sys.argv[2]
@@ -75,7 +82,7 @@ def main():
     if os.path.exists(indexPath):
         searchSpace = queryProc(queryStrg)
         search(indexPath, searchSpace)
-        print(results)
+        disp(results)
 
     else:
         print("Dir does not exist!")
