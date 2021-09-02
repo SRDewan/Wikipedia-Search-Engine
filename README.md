@@ -10,3 +10,13 @@ Search engine for wikipedia data dump.
 6. Secondary indexing, requires sorted index and separate index file per segment, probably alphabetically.
 7. Remove other field data from body to reduce mem and speed up.
 
+# How To Run The Code
+
+Run the following commands:
+```
+pip install -r requirements.txt
+bash index.sh <path_to_wiki_dump> <path_to_inverted_index> invertedindex_stat.txt
+bash search.sh <path_to_inverted_index> <query_string>
+```
+
+Note that for the query string, it has been assumed that there will be no spaces before and after the ':' for field queries. Any such cases will be treated as regular (non field) queries.
