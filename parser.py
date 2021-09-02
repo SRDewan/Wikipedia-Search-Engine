@@ -25,6 +25,9 @@ def indexWrite(outFolder):
     content = ""
 
     for word in sorted(index):
+        if(len(index[word]) <= 1):
+            continue
+
         content += word + "|"
         for idx, doc in enumerate(index[word]):
             content += doc
@@ -145,9 +148,6 @@ def parse(file_path, outFolder, statFile):
 
         if elem.tag == 'title':
             docs.append({ 'title': elem.text })
-
-        elif elem.tag == 'id' and 'id' not in docs[-1]:
-            docs[-1]['id'] = elem.text
 
         elif elem.tag == 'text' and elem.text != None:
             bodyParse(elem.text, str(ctr), docs[-1]['title'])
