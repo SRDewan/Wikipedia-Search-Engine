@@ -12,20 +12,22 @@ snowStemmer = SnowballStemmer(language='english')
 
 index = {}
 stemmed = {}
+allTokens = set()
 batchSize = 1000
 
 def statWrite(statFilePath):
     statFile = open(statFilePath, "w")
-    statFile.write(str(0) + "\n" + str(len(index)))
+    statFile.write(str(len(allTokens)) + "\n" + str(len(index)))
     statFile.close()
 
 def indexWrite(outFolder):
     labels = ["t", "b", "i", "c", "l", "r"]
     content = ""
 
-    for word in index:
-        for doc in index[word]:
-            content += word + ":d" + doc
+    for word in sorted(index):
+        content += word + "|"
+        for idx, doc in enumerate(index[word]):
+            content += doc
             ctr = 0
 
             for field in index[word][doc]:
@@ -33,7 +35,10 @@ def indexWrite(outFolder):
                     content += labels[ctr] + str(field) 
                 ctr += 1
 
-            content += "\n"
+            if(idx < len(index[word]) - 1):
+                content += "|"
+
+        content += "\n"
 
     indexFile = open(os.path.join(outFolder, "index.txt"), "w")
     indexFile.write(content)
@@ -44,6 +49,8 @@ def processing(text, id, field):
     tokens = re.split(r'[^a-z0-9]+', text)
 
     for token in tokens:
+        allTokens.add(token)
+
         if len(token) > 1 and token not in stopWords:
             if token not in stemmed:
                 stemmed[token] = snowStemmer.stem(token)
@@ -143,7 +150,7 @@ def parse(file_path, outFolder, statFile):
             docs[-1]['id'] = elem.text
 
         elif elem.tag == 'text' and elem.text != None:
-            bodyParse(elem.text, docs[-1]['id'], docs[-1]['title'])
+            bodyParse(elem.text, str(ctr), docs[-1]['title'])
 
         elif elem.tag == 'page':
             ctr += 1

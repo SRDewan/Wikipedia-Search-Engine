@@ -13,7 +13,7 @@ def main():
     except FileExistsError:
         print("Dir already exists!")
 
-    docs = parse(wikiPath, indexPath, indexStat)
+    parse(wikiPath, indexPath, indexStat)
 
 if __name__ == '__main__':
     main()
