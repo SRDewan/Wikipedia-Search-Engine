@@ -26,6 +26,7 @@ def indexWrite(outFolder):
 
     for word in sorted(index):
         if(len(index[word]) <= 1):
+            del(index[word])
             continue
 
         content += word + "|"
