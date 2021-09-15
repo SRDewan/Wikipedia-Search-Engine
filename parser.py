@@ -159,23 +159,28 @@ def bodyParse(body, id, title):
 def parse(file_path, outFolder, statFile):
     docs = []
 
-    for event, elem in ET.iterparse(file_path, events=("end",)):
-        _, _, elem.tag = elem.tag.rpartition('}')
+    context = ET.iterparse(file_path, events=("start", "end"))
+    # get the root element
+    event, root = next(context)
 
-        if elem.tag == 'title':
-            docs.append(elem.text)
+    for event, elem in context:
+        if event == "end":
+            _, _, elem.tag = elem.tag.rpartition('}')
 
-        elif elem.tag == 'text' and elem.text != None:
-            docId = len(docs) - 1
-            bodyParse(elem.text, str(docId), docs[docId])
+            if elem.tag == 'title':
+                docs.append(elem.text)
 
-        elif elem.tag == 'page':
-            if len(docs) % batchSize == 0:
+            elif elem.tag == 'text' and elem.text != None:
+                docId = len(docs) - 1
+                bodyParse(elem.text, str(docId), docs[docId])
+
+            elif elem.tag == 'page':
+                if len(docs) % batchSize == 0:
+                    dump(outFolder, len(docs))
+
+            elif elem.tag == 'mediawiki':
                 dump(outFolder, len(docs))
 
-        elif elem.tag == 'mediawiki':
-            dump(outFolder, len(docs))
-
-        elem.clear()
+            root.clear()
 
     titleWrite(docs, os.path.join(outFolder, "titles.txt"))
