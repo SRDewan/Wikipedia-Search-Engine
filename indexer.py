@@ -2,6 +2,7 @@ import sys
 import os
 
 from parser import *
+from finalInd import *
 
 def main(): 
     wikiPath = sys.argv[1]
@@ -14,6 +15,7 @@ def main():
         print("Dir already exists!")
 
     parse(wikiPath, indexPath, indexStat)
+    finalInd(indexPath)
 
 if __name__ == '__main__':
     main()

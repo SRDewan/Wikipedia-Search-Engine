@@ -12,39 +12,57 @@ snowStemmer = SnowballStemmer(language='english')
 
 index = {}
 stemmed = {}
-allTokens = set()
-batchSize = 1000
+batchSize = 10000
+ctr = 0
 
-def statWrite(statFilePath):
-    statFile = open(statFilePath, "w")
-    statFile.write(str(len(allTokens)) + "\n" + str(len(index)))
-    statFile.close()
+def dump(outFolder, docCount):
+    global ctr, index
 
-def indexWrite(outFolder):
+    filePath = os.path.join(outFolder, "{}.txt".format(ctr))
+    indexWrite(filePath)
+    ctr += 1
+
+    print("Done with ", docCount, " docs")
+    index = {}
+
+def titleWrite(docs, filePath):
+    content = ""
+    for i in range(len(docs)):
+        content += str(i) + "|" + docs[i] + "\n"
+
+    titleFile = open(filePath, "w")
+    titleFile.write(content)
+    titleFile.close()
+
+def indexWrite(filePath):
     labels = ["t", "b", "i", "c", "l", "r"]
     content = ""
 
     for word in sorted(index):
-        if(len(index[word]) <= 1):
-            del(index[word])
-            continue
-
-        content += word + "|"
+        line = word + "|"
         for idx, doc in enumerate(index[word]):
-            content += doc
+            totFreq = sum(index[word][doc])
+            if(totFreq <= 1):
+                continue
+
+            line += doc
             ctr = 0
 
             for field in index[word][doc]:
                 if(field):
-                    content += labels[ctr] + str(field) 
+                    line += labels[ctr] + str(field) 
                 ctr += 1
 
             if(idx < len(index[word]) - 1):
-                content += "|"
+                line += "|"
 
-        content += "\n"
+        if(line == word + "|"):
+            continue
 
-    indexFile = open(os.path.join(outFolder, "index.txt"), "w")
+        line += "\n"
+        content += line
+
+    indexFile = open(filePath, "w")
     indexFile.write(content)
     indexFile.close()
 
@@ -53,8 +71,6 @@ def processing(text, id, field):
     tokens = re.split(r'[^a-z0-9]+', text)
 
     for token in tokens:
-        allTokens.add(token)
-
         if len(token) > 1 and token not in stopWords:
             if token not in stemmed:
                 stemmed[token] = snowStemmer.stem(token)
@@ -142,23 +158,24 @@ def bodyParse(body, id, title):
 
 def parse(file_path, outFolder, statFile):
     docs = []
-    ctr = 0
 
     for event, elem in ET.iterparse(file_path, events=("end",)):
         _, _, elem.tag = elem.tag.rpartition('}')
 
         if elem.tag == 'title':
-            docs.append({ 'title': elem.text })
+            docs.append(elem.text)
 
         elif elem.tag == 'text' and elem.text != None:
-            bodyParse(elem.text, str(ctr), docs[-1]['title'])
+            docId = len(docs) - 1
+            bodyParse(elem.text, str(docId), docs[docId])
 
         elif elem.tag == 'page':
-            ctr += 1
-            # if ctr % batchSize == 0:
-                # print("Done with ", ctr, " docs")
+            if len(docs) % batchSize == 0:
+                dump(outFolder, len(docs))
+
+        elif elem.tag == 'mediawiki':
+            dump(outFolder, len(docs))
 
         elem.clear()
 
-    indexWrite(outFolder)
-    statWrite(statFile)
+    titleWrite(docs, os.path.join(outFolder, "titles.txt"))
