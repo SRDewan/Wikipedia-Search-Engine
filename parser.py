@@ -54,9 +54,9 @@ def indexWrite(filePath):
                     line += labels[ctr] + str(field) 
                 ctr += 1
 
-            if(idx < len(index[word]) - 1):
-                line += "|"
+            line += "|"
 
+        line = line[:-1]
         if(line == word + "|"):
             continue
 
