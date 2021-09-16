@@ -53,6 +53,39 @@ def filePostMap(fileNums):
 
     return fileMap
 
+def binarySearch(filePath, strgs, postings, fieldQueries):
+    f = open(filePath, "r")
+    lines = f.readlines()
+    low = 0
+
+    for strg in strgs:
+        mid = low
+        high = len(lines)
+
+        while low <= high:
+            mid = (low + high) // 2
+            parts = lines[mid].split('|')
+            term = parts[0]
+
+            if strg == term:
+                fnum = -1
+                for field in fieldQueries:
+                    if strg in fieldQueries[field]: 
+                        postings = scoring(parts[1:], postings, fnum)
+                    fnum += 1
+
+                break
+
+            elif strg > term:
+                low = mid + 1
+
+            else:
+                high = mid - 1
+
+        low = mid
+
+    return postings
+
 def searchFile(filePath, strgs, postings, fieldQueries):
     f = open(filePath, "r")
     parts = f.readline().split('|')
@@ -99,7 +132,7 @@ def search(indexPath, terms, fieldQueries):
     fileMap = filePostMap(fileNums) 
 
     for indexFileName in fileMap.keys():
-        postings = searchFile(os.path.join(indexPath, indexFileName), fileMap[indexFileName], postings, fieldQueries)
+        postings = binarySearch(os.path.join(indexPath, indexFileName), fileMap[indexFileName], postings, fieldQueries)
 
     return postings
 
