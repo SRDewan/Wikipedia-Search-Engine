@@ -56,10 +56,10 @@ def indexWrite(filePath):
 
             line += "|"
 
-        line = line[:-1]
         if(line == word + "|"):
             continue
 
+        line = line[:-1]
         line += "\n"
         content += line
 
