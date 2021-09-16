@@ -15,22 +15,23 @@ stemmed = {}
 batchSize = 10000
 ctr = 0
 
-def dump(outFolder, docCount):
+def dump(outFolder, docs):
     global ctr, index
 
     filePath = os.path.join(outFolder, "{}.txt".format(ctr))
     indexWrite(filePath)
+    titleWrite(docs[ctr * batchSize:], os.path.join(outFolder, "titles.txt"))
     ctr += 1
 
-    print("Done with ", docCount, " docs")
+    print("Done with ", len(docs), " docs")
     index = {}
 
 def titleWrite(docs, filePath):
     content = ""
     for i in range(len(docs)):
-        content += str(i) + "|" + docs[i] + "\n"
+        content += str(ctr * batchSize + i) + "|" + docs[i] + "\n"
 
-    titleFile = open(filePath, "w")
+    titleFile = open(filePath, "a")
     titleFile.write(content)
     titleFile.close()
 
@@ -176,11 +177,9 @@ def parse(file_path, outFolder, statFile):
 
             elif elem.tag == 'page':
                 if len(docs) % batchSize == 0:
-                    dump(outFolder, len(docs))
+                    dump(outFolder, docs)
 
             elif elem.tag == 'mediawiki':
-                dump(outFolder, len(docs))
+                dump(outFolder, docs)
 
             root.clear()
-
-    titleWrite(docs, os.path.join(outFolder, "titles.txt"))
