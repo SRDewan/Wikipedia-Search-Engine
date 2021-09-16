@@ -172,7 +172,7 @@ def disp(titlesFilePath, results, runtime):
     titles = titleFile.readlines()
 
     for res in results:
-        ans += res[0] + ", " + titles[int(res[0])].split('|')[1]
+        ans += res[0] + ", " + titles[int(res[0])]
 
     ans += str(runtime) + "\n"
     opFile = open('queries_op.txt', 'a')
