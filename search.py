@@ -11,6 +11,7 @@ from nltk.stem.snowball import SnowballStemmer
 stopWords = set(stopwords.words('english'))
 snowStemmer = SnowballStemmer(language='english')
 docCount = 0
+ans = ""
 
 def indexToJson(doc):
     fields = {"t": 0, "b": 0, "i": 0, "c": 0, "l": 0, "r": 0}
@@ -23,9 +24,9 @@ def indexToJson(doc):
     return [id, fields]
 
 def tfScore(fields, field):
-    wts = [30, 1, 15, 10, 0.25, 0.5]
+    wts = [100, 1, 20, 15, 0.5, 0.15]
     if field > -1:
-        wts[field] += 100
+        wts[field] += 1000
 
     return (1 + math.log(np.dot(wts, fields) + 1))
 
@@ -132,7 +133,8 @@ def queryProc(queryStrg):
     return [terms, fieldQueries]
 
 def disp(titlesFilePath, results, runtime):
-    ans = ""
+    global ans
+
     titleFile = open(titlesFilePath, 'r')
     titles = titleFile.readlines()
 
@@ -144,6 +146,7 @@ def disp(titlesFilePath, results, runtime):
     opFile.write(ans)
     opFile.close()
     titleFile.close()
+    ans = "\n"
         
 def main(): 
     global docCount

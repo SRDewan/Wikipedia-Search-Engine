@@ -29,7 +29,7 @@ def dump(outFolder, docs):
 def titleWrite(docs, filePath):
     content = ""
     for i in range(len(docs)):
-        content += str(ctr * batchSize + i) + "|" + docs[i] + "\n"
+        content += docs[i] + "\n"
 
     titleFile = open(filePath, "a")
     titleFile.write(content)
